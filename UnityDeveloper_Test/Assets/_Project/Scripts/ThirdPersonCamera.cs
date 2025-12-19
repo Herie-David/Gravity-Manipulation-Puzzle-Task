@@ -21,9 +21,6 @@ public class ThirdPersonCamera : MonoBehaviour
         Vector3 direction = (desiredPosition - target.position).normalized;
         float distance = Vector3.Distance(target.position, desiredPosition);
 
-        // Ensure we have a valid direction to look at
-        if (direction == Vector3.zero) return;
-
         // Raycast to find if a wall is in between the player and camera
         if (Physics.SphereCast(target.position, cameraRadius, direction, out RaycastHit hit, distance, obstacleLayers))
         {
