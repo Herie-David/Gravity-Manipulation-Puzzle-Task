@@ -14,12 +14,15 @@ public class ThirdPersonCamera : MonoBehaviour
     {
         if (target == null) return;
 
-        // alculate the ideal camera position relative to player orientation
+        // Calculate the ideal camera position relative to player orientation
         Vector3 desiredPosition = target.TransformPoint(offset);
 
         // Check for collisions between the player and the desired position
         Vector3 direction = (desiredPosition - target.position).normalized;
         float distance = Vector3.Distance(target.position, desiredPosition);
+
+        // Ensure we have a valid direction to look at
+        if (direction == Vector3.zero) return;
 
         // Raycast to find if a wall is in between the player and camera
         if (Physics.SphereCast(target.position, cameraRadius, direction, out RaycastHit hit, distance, obstacleLayers))
@@ -31,7 +34,9 @@ public class ThirdPersonCamera : MonoBehaviour
         // Smoothly interpolate position
         transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
 
-        // Always look at the player, aligning camera 'Up' with player 'Up'
-        transform.LookAt(target.position, target.up);
+        // Smoothly align Camera Up with Player Up
+        // This prevents the camera from spinning wildly during gravity transitions
+        Quaternion targetRotation = Quaternion.LookRotation(target.position - transform.position, target.up);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, smoothSpeed * Time.deltaTime);
     }
 }

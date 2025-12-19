@@ -14,15 +14,15 @@ public class InputReader : MonoBehaviour
         MoveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         JumpPressed = Input.GetKeyDown(KeyCode.Space);
 
-        // Selection Logic (Arrow Keys)
-        if (Input.GetKeyDown(KeyCode.UpArrow)) SelectedGravityDir = Vector3.up;
-        if (Input.GetKeyDown(KeyCode.DownArrow)) SelectedGravityDir = Vector3.down;
-        if (Input.GetKeyDown(KeyCode.LeftArrow)) SelectedGravityDir = Vector3.left;
-        if (Input.GetKeyDown(KeyCode.RightArrow)) SelectedGravityDir = Vector3.right;
+        // Inside InputReader.cs Update()
+        if (Input.GetKeyDown(KeyCode.UpArrow)) SelectedGravityDir = transform.up;     // Current "Ceiling"
+        if (Input.GetKeyDown(KeyCode.DownArrow)) SelectedGravityDir = -transform.up;    // Current "Floor"
+        if (Input.GetKeyDown(KeyCode.LeftArrow)) SelectedGravityDir = -transform.right; // Current "Left Wall"
+        if (Input.GetKeyDown(KeyCode.RightArrow)) SelectedGravityDir = transform.right;  // Current "Right Wall"
 
-        // Z-Axis Support for 3D navigation
-        if (Input.GetKeyDown(KeyCode.PageUp)) SelectedGravityDir = Vector3.forward;
-        if (Input.GetKeyDown(KeyCode.PageDown)) SelectedGravityDir = Vector3.back;
+        // Z-axis relative to where the player is looking
+        if (Input.GetKeyDown(KeyCode.PageUp)) SelectedGravityDir = transform.forward;
+        if (Input.GetKeyDown(KeyCode.PageDown)) SelectedGravityDir = -transform.forward;
 
         GravityCommitPressed = Input.GetKeyDown(KeyCode.Return);
     }

@@ -5,6 +5,7 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 8f;
+    private float startGracePeriod = 2.0f; // Give the game 1 second to stabilize
     [SerializeField] private Animator animator;
 
     private CharacterController controller;
@@ -25,13 +26,19 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        Debug.Log($"Current Speed: {controller.velocity.magnitude}");
+        // Stop all logic if the game has ended or is restarting
+        if (GameSessionManager.Instance != null && !GameSessionManager.Instance.IsGameActive)
+        {
+            return;
+        }
+
         Vector3 gravityDir = GravityManager.Instance.GetGravityDirection();
         float rayDistance = (controller.height / 2f) + 0.15f;
         bool isGrounded = Physics.Raycast(transform.position, gravityDir, rayDistance);
 
         // Calculate Movement Vector
-        Vector3 moveDir = (transform.forward * input.MoveInput.y) + (transform.right * input.MoveInput.x);
+        Vector3 moveDir = (transform.forward * input.MoveInput.y) +
+                          (transform.right * input.MoveInput.x);
         Vector3 movement = moveDir * moveSpeed;
 
         // Handle Jumping
@@ -54,25 +61,41 @@ public class PlayerController : MonoBehaviour
         Vector3 finalMotion = movement + velocity;
         controller.Move(finalMotion * Time.deltaTime);
 
-        // Send 'movement.magnitude' to Animator (not controller.velocity)
+        // Animator
         if (animator != null)
         {
-            // Use the magnitude of our intended WASD movement
             float currentSpeed = movement.magnitude;
             animator.SetFloat("Speed", currentSpeed);
             animator.SetBool("isGrounded", isGrounded);
-
-            // Debug to verify
-            // Debug.Log($"Intended Speed: {currentSpeed}");
         }
 
-        // Handle Gravity Execution Intent
+        // Gravity Execution Intent
         if (input.GravityCommitPressed && input.HasValidGravitySelection)
         {
             GravityManager.Instance.UpdateWorldGravity(input.SelectedGravityDir);
             input.ConsumeGravityCommit();
         }
 
+        // Void fall grace period
+        if (startGracePeriod > 0)
+        {
+            startGracePeriod -= Time.deltaTime;
+            return;
+        }
+
+        CheckForFreeFall();
+    }
+
+
+    private void CheckForFreeFall()
+    {
+        Vector3 gravityDir = GravityManager.Instance.GetGravityDirection();
+
+        // Raycast: if no ground is found within 30 units in the direction of gravity
+        if (!Physics.Raycast(transform.position, gravityDir, 30f))
+        {
+            GameSessionManager.Instance.EndGame("YOU FELL INTO THE VOID!");
+        }
     }
 
     private void HandleGravityChange(Vector3 newDir)

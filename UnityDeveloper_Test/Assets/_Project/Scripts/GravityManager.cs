@@ -43,4 +43,9 @@ public class GravityManager : MonoBehaviour
     }
     public Vector3 GetGravityDirection() => Physics.gravity.normalized;
 
+    private void OnDestroy()
+    {
+        // Clear all subscribers when the manager is destroyed (on scene reload)
+        OnGravityChanged = null;
+    }
 }
